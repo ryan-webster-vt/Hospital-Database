@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MySQL and HTML</title>
+</head>
+
+<body>
+    <h1> Insert Patient Data </h1>
+    <form action="/add" method="post">
+        <!-- First Name -->
+        <label for="first_name">First Name:</label>
+        <input type="text" id="first_name" name="first_name" placeholder="Enter First Name" required><br><br>
+
+        <!-- Middle Name -->
+        <label for="middle_name">Middle Name:</label>
+        <input type="text" id="middle_name" name="middle_name" placeholder="Enter Middle Name" required><br><br>
+
+        <!-- Last Name -->
+        <label for="last_name">Last Name:</label>
+        <input type="text" id="last_name" name="last_name" placeholder="Enter Last Name" required><br><br>
+
+        <!-- Date of Birth -->
+        <label for="date_of_birth">Date of Birth:</label>
+        <input type="date" id="date_of_birth" name="date_of_birth" required><br><br>
+
+        <!-- Phone Number -->
+        <label for="phone_number">Phone Number:</label>
+        <input type="tel" id="phone_number" name="phone_number" placeholder="Enter Phone Number" required><br><br>
+
+        <!-- Medical Record ID -->
+        <label for="medical_record_id">Medical Record ID:</label>
+        <input type="number" id="medical_record_id" name="medical_record_id" placeholder="Enter Medical Record ID" required><br><br>
+
+        <!-- Insurance ID -->
+        <label for="insurance_id">Insurance ID:</label>
+        <input type="number" id="insurance_id" name="insurance_id" placeholder="Enter Insurance ID" required><br><br>
+
+        <!-- Submit Button -->
+        <input type="submit" value="Submit">
+    </form>
+
+</body>
+</html>
