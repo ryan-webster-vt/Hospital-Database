@@ -1,8 +1,9 @@
-import mysql.connector
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template
+import pymysql
 
 app = Flask(__name__)
 
+# Database configuration
 config = {
     'host': 'localhost',
     'user': 'root',
@@ -11,33 +12,18 @@ config = {
 }
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def home():
+    try:
+        # Try to connect to the database
+        connection = pymysql.connect(**config)
 
-@app.route('/add', methods=['POST'])
-def add_patient():
-    first_name = request.form['first_name']
-    middle_name = request.form['middle_name']
-    last_name = request.form['last_name']
-    date_of_birth = request.form['date_of_birth']
-    phone_number = request.form['phone_number']
-    medical_record_id = request.form['medical_record_id']
-    insurance_id = request.form['insurance_id']
-    
-    conn = mysql.connector.connect(**config)
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        INSERT INTO Patients 
-        (first_name, middle_name, last_name, date_of_birth, phone_number, medical_record_id, insurance_id) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (first_name, middle_name, last_name, date_of_birth, phone_number, medical_record_id, insurance_id))
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
-    
-    return redirect(url_for('index'))
+        # If connection is successful, display the message
+        connection.close()
+        return render_template('index.html', message="Connected to the Database!")
+
+    except pymysql.MySQLError as err:
+        # If there's an error, display the error message
+        return render_template('index.html', message=f"Error: {err}")
 
 if __name__ == '__main__':
     app.run(debug=True)
