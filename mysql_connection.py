@@ -1,29 +1,42 @@
-from flask import Flask, render_template
 import pymysql
+import os
+from dotenv import load_dotenv
 
-app = Flask(__name__)
+load_dotenv()
 
-# Database configuration
 config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'password2357!',
-    'database': 'Hospital'
+    'host': os.getenv('DB_HOST'),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD'),
+    'database': os.getenv('DB_NAME')
 }
 
-@app.route('/')
-def home():
+def get_connection():
+    """
+    Create and return a database connection
+    """
     try:
-        # Try to connect to the database
         connection = pymysql.connect(**config)
+        return connection
+    except pymysql.Error as e:
+        print(f"Error connecting to the database: {e}")
+        raise
 
-        # If connection is successful, display the message
+def test_connection():
+    """
+    Test if the database connection works
+    """
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute("SELECT VERSION()")
+        version = cursor.fetchone()
+        print(f"Successfully connected to MariaDB version {version[0]}")
         connection.close()
-        return render_template('index.html', message="Connected to the Database!")
-
-    except pymysql.MySQLError as err:
-        # If there's an error, display the error message
-        return render_template('index.html', message=f"Error: {err}")
+        return True
+    except pymysql.Error as e:
+        print(f"Error connecting to the database: {e}")
+        return False
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    test_connection()
