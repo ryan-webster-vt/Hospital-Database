@@ -15,9 +15,27 @@ def insert():
         connection = get_connection()
         cursor = connection.cursor()
         
+        # First create medical record
+        med_sql = """INSERT INTO medical_record 
+                    (sex, height, vaccination_count) 
+                    VALUES (%s, %s, %s)"""
+        
+        med_data = (
+            request.form['sex'],
+            request.form['height'],
+            request.form.get('vaccination_count', 0)
+        )
+        
+        cursor.execute(med_sql, med_data)
+        connection.commit()
+        
+        # Get the new medical record ID
+        medical_record_id = cursor.lastrowid
+        
+        # Now insert patient with the medical record ID
         sql = """INSERT INTO patients 
-                (first_name, middle_name, last_name, date_of_birth, phone_number, insurance_id) 
-                VALUES (%s, %s, %s, %s, %s, %s)"""
+                (first_name, middle_name, last_name, date_of_birth, phone_number, insurance_id, medical_record_id) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)"""
         
         # Handle middle name (could be empty)
         middle_name = request.form['middle_name']
@@ -34,7 +52,8 @@ def insert():
             request.form['last_name'],
             request.form['date_of_birth'],
             request.form['phone_number'],
-            insurance_id
+            insurance_id,
+            medical_record_id  # Include medical record ID
         )
         
         cursor.execute(sql, data)
@@ -42,13 +61,6 @@ def insert():
         
         # Get the ID of the inserted patient for the success message
         patient_id = cursor.lastrowid
-        
-        # Get medical records and insurance options for the form
-        cursor.execute("SELECT medical_record_id, sex, height FROM medical_record")
-        medical_records = cursor.fetchall()
-        
-        cursor.execute("SELECT insurance_id, name FROM insurances")
-        insurances = cursor.fetchall()
         
         return redirect("/list?message=Patient added successfully with ID: " + str(patient_id))
     except Exception as e:
@@ -183,4 +195,4 @@ def list_patients():
             connection.close()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

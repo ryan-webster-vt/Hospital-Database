@@ -495,12 +495,14 @@
             // Set patient ID in the form
             document.getElementById("updatePatientId").value = patientId;
             
-            // If patient has a medical record, populate the form with current values
-            if (hasMedicalRecord === 'M' || hasMedicalRecord === 'F') {
+            // Always populate the form with current values
+            document.getElementById("updateSex").value = sex === 'M' || sex === 'F' ? sex : 'M';
+            document.getElementById("updateHeight").value = height !== 'N/A' ? height : '';
+            document.getElementById("updateVaccinations").value = vaccinations !== '0' ? vaccinations : '0';
+            
+            // If patient has a medical record, set the medical record ID
+            if (medicalRecordId) {
                 document.getElementById("currentMedicalRecordId").value = medicalRecordId;
-                document.getElementById("updateSex").value = sex;
-                document.getElementById("updateHeight").value = height;
-                document.getElementById("updateVaccinations").value = vaccinations;
             }
             
             patientModal.style.display = "block";
