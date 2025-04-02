@@ -1,29 +1,54 @@
-from flask import Flask, render_template
 import pymysql
+import os
+from dotenv import load_dotenv
 
-app = Flask(__name__)
+# Load environment variables from .env file
+load_dotenv()
 
-# Database configuration
+# Database configuration from environment variables
 config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'password2357!',
-    'database': 'Hospital'
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', ''),
+    'database': os.getenv('DB_NAME', 'hospital')
 }
 
-@app.route('/')
-def home():
+def get_connection():
+    """
+    Create and return a database connection
+    """
     try:
-        # Try to connect to the database
         connection = pymysql.connect(**config)
+        return connection
+    except pymysql.Error as e:
+        print(f"Error connecting to the database: {e}")
+        raise
 
-        # If connection is successful, display the message
+def test_connection():
+    """
+    Test if the database connection works
+    """
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        
+        # Test if we can connect and access tables
+        cursor.execute("SHOW TABLES")
+        tables = cursor.fetchall()
+        print(f"Successfully connected to {config['database']} database")
+        print(f"Available tables: {', '.join([table[0] for table in tables])}")
+        
+        # Get sample data
+        cursor.execute("SELECT COUNT(*) FROM patients")
+        count = cursor.fetchone()[0]
+        print(f"Number of patients in database: {count}")
+        
         connection.close()
-        return render_template('index.html', message="Connected to the Database!")
-
-    except pymysql.MySQLError as err:
-        # If there's an error, display the error message
-        return render_template('index.html', message=f"Error: {err}")
+        return True
+    except pymysql.Error as e:
+        print(f"Error connecting to the database: {e}")
+        return False
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Test the connection when running this file directly
+    test_connection()
