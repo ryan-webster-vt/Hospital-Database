@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, redirect, flash
 from mysql_connection import get_connection
+import os
+
+app = Flask(__name__)
 
 @app.route("/")
 def index():
@@ -14,17 +17,22 @@ def insert():
         connection = get_connection()
         cursor = connection.cursor()
         
-        sql = "INSERT INTO Patients (name, age, gender, diagnosis) VALUES (%s, %s, %s, %s)"
+        sql = """INSERT INTO patients 
+                (first_name, last_name, date_of_birth, phone_number) 
+                VALUES (%s, %s, %s, %s)"""
         data = (
-            request.form['name'],
-            request.form['age'],
-            request.form['gender'],
-            request.form['diagnosis']
+            request.form['first_name'],
+            request.form['last_name'],
+            request.form['date_of_birth'],
+            request.form['phone_number']
         )
         
         cursor.execute(sql, data)
         connection.commit()
-        return render_template("index.html", message="Patient added successfully!")
+        
+        # Get the ID of the inserted patient for the success message
+        patient_id = cursor.lastrowid
+        return render_template("index.html", message=f"Patient added successfully with ID: {patient_id}")
     except Exception as e:
         return render_template("index.html", message=f"Error adding patient: {str(e)}")
     finally:
@@ -37,13 +45,21 @@ def delete():
         connection = get_connection()
         cursor = connection.cursor()
         
-        sql = "DELETE FROM Patients WHERE patient_id = %s"
+        # First check if patient exists
+        check_sql = "SELECT first_name, last_name FROM patients WHERE patient_id = %s"
+        cursor.execute(check_sql, (request.form['patient_id'],))
+        patient = cursor.fetchone()
+        
+        if not patient:
+            return render_template("index.html", message="No patient found with that ID")
+        
+        # Delete the patient
+        sql = "DELETE FROM patients WHERE patient_id = %s"
         cursor.execute(sql, (request.form['patient_id'],))
         connection.commit()
         
-        if cursor.rowcount == 0:
-            return render_template("index.html", message="No patient found with that ID")
-        return render_template("index.html", message="Patient deleted successfully!")
+        return render_template("index.html", 
+                             message=f"Patient {patient[0]} {patient[1]} (ID: {request.form['patient_id']}) deleted successfully!")
     except Exception as e:
         return render_template("index.html", message=f"Error deleting patient: {str(e)}")
     finally:
@@ -56,7 +72,13 @@ def list_patients():
         connection = get_connection()
         cursor = connection.cursor()
         
-        cursor.execute("SELECT * FROM Patients ORDER BY created_at DESC")
+        # Select patients with a proper join
+        cursor.execute("""
+            SELECT p.patient_id, p.first_name, p.last_name, 
+                   p.date_of_birth, p.phone_number 
+            FROM patients p
+            ORDER BY p.patient_id DESC
+        """)
         patients = cursor.fetchall()
         
         return render_template("index.html", 

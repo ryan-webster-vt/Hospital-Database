@@ -22,10 +22,11 @@
         }
         label {
             display: inline-block;
-            width: 100px;
+            width: 120px;
         }
         input[type="text"],
-        input[type="number"] {
+        input[type="number"],
+        input[type="date"] {
             padding: 5px;
             width: 200px;
         }
@@ -77,20 +78,20 @@
     <h2>Insert New Patient</h2>
     <form action="/insert" method="post">
         <div class="form-group">
-            <label>Name:</label>
-            <input type="text" name="name" required>
+            <label>First Name:</label>
+            <input type="text" name="first_name" required>
         </div>
         <div class="form-group">
-            <label>Age:</label>
-            <input type="number" name="age" required>
+            <label>Last Name:</label>
+            <input type="text" name="last_name" required>
         </div>
         <div class="form-group">
-            <label>Gender:</label>
-            <input type="text" name="gender" required>
+            <label>Date of Birth:</label>
+            <input type="date" name="date_of_birth" required>
         </div>
         <div class="form-group">
-            <label>Diagnosis:</label>
-            <input type="text" name="diagnosis" required>
+            <label>Phone Number:</label>
+            <input type="text" name="phone_number" placeholder="555-1234" required>
         </div>
         <button type="submit">Insert Patient</button>
     </form>
@@ -110,11 +111,10 @@
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Diagnosis</th>
-                <th>Created At</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Date of Birth</th>
+                <th>Phone Number</th>
             </tr>
         </thead>
         <tbody>
@@ -125,7 +125,6 @@
                 <td>{{ patient[2] }}</td>
                 <td>{{ patient[3] }}</td>
                 <td>{{ patient[4] }}</td>
-                <td>{{ patient[5] }}</td>
             </tr>
             {% endfor %}
         </tbody>
