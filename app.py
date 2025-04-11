@@ -5,6 +5,7 @@ from functools import wraps
 import os
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
 @app.route("/")
 def index():
@@ -282,7 +283,208 @@ def admin_create_user():
     
     return render_template("admin_create_user.html")
 
+# --------------------------
+# New Statistical Reports Routes
+# --------------------------
 
+# ADMIN STATISTICS
+@app.route("/stats/admin")
+@login_required(role="admin")
+def admin_stats():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        # 1. Total number of patients
+        cursor.execute("SELECT COUNT(*) FROM patients")
+        total_patients = cursor.fetchone()[0]
+
+        # 2. Average age of patients (calculate age using TIMESTAMPDIFF in years)
+        cursor.execute("SELECT AVG(TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE())) FROM patients")
+        avg_age = cursor.fetchone()[0]
+
+        # 3. Total gross bill amounts (SUM)
+        cursor.execute("SELECT SUM(gross_cost) FROM bills")
+        total_bills = cursor.fetchone()[0]
+
+        # 4. Minimum and Maximum bill amounts (MIN and MAX)
+        cursor.execute("SELECT MIN(gross_cost), MAX(gross_cost) FROM bills")
+        min_bill, max_bill = cursor.fetchone()
+
+        # 5. Average vaccination count across all medical records (AVG)
+        cursor.execute("SELECT AVG(vaccination_count) FROM medical_record")
+        avg_vaccinations = cursor.fetchone()[0]
+
+        return render_template("admin_stats.html", 
+                               total_patients=total_patients, 
+                               avg_age=avg_age,
+                               total_bills=total_bills, 
+                               min_bill=min_bill, 
+                               max_bill=max_bill, 
+                               avg_vaccinations=avg_vaccinations)
+    except Exception as e:
+        return f"Error generating admin statistics: {str(e)}"
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+# DOCTOR STATISTICS
+@app.route("/stats/doctor")
+@login_required(role="doctor")
+def doctor_stats():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        # 1. Total number of doctors in the hospital
+        cursor.execute("SELECT COUNT(*) FROM doctors")
+        total_doctors = cursor.fetchone()[0]
+
+        # 2. Average number of patients treated per doctor (from treats table)
+        cursor.execute("""
+            SELECT AVG(patient_count) 
+            FROM (SELECT COUNT(*) AS patient_count FROM treats GROUP BY doctor_id) AS sub
+        """)
+        avg_patients = cursor.fetchone()[0]
+
+        # 3. Average gross bill amount per doctor (by aggregating bills grouped by doctor)
+        cursor.execute("""
+            SELECT AVG(bill_sum) 
+            FROM (SELECT SUM(gross_cost) AS bill_sum FROM bills GROUP BY doctor_id) AS sub
+        """)
+        avg_bill_per_doctor = cursor.fetchone()[0]
+
+        # 4. Prescription dosage statistics (MIN, MAX, AVG) for prescriptions by doctors
+        cursor.execute("SELECT MIN(dosage), MAX(dosage), AVG(dosage) FROM prescriptions")
+        min_dosage, max_dosage, avg_dosage = cursor.fetchone()
+
+        # 5. Average number of prescriptions issued per doctor
+        cursor.execute("""
+            SELECT AVG(prescription_count) 
+            FROM (SELECT COUNT(*) AS prescription_count FROM prescriptions GROUP BY doctor_id) AS sub
+        """)
+        avg_prescriptions_per_doctor = cursor.fetchone()[0]
+
+        return render_template("doctor_stats.html", 
+                               total_doctors=total_doctors, 
+                               avg_patients=avg_patients,
+                               avg_bill_per_doctor=avg_bill_per_doctor, 
+                               min_dosage=min_dosage, 
+                               max_dosage=max_dosage, 
+                               avg_dosage=avg_dosage,
+                               avg_prescriptions_per_doctor=avg_prescriptions_per_doctor)
+    except Exception as e:
+        return f"Error generating doctor statistics: {str(e)}"
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+# NURSE STATISTICS
+@app.route("/stats/nurse")
+@login_required(role="nurse")
+def nurse_stats():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        # 1. Total number of nurses in the hospital
+        cursor.execute("SELECT COUNT(*) FROM nurses")
+        total_nurses = cursor.fetchone()[0]
+
+        # 2. Average number of patients cared for per nurse (via the cares table)
+        cursor.execute("""
+            SELECT AVG(patient_count) 
+            FROM (SELECT COUNT(*) AS patient_count FROM cares GROUP BY nurse_id) AS sub
+        """)
+        avg_patients_per_nurse = cursor.fetchone()[0]
+
+        # 3. Overall patient height statistics (MIN, MAX, AVG) for patients cared for by nurses
+        cursor.execute("""
+            SELECT MIN(m.height), MAX(m.height), AVG(m.height)
+            FROM medical_record m
+            JOIN patients p ON m.medical_record_id = p.medical_record_id
+            JOIN cares c ON p.patient_id = c.patient_id
+        """)
+        min_height, max_height, avg_height = cursor.fetchone()
+
+        # 4. Total sum of vaccination counts among patients under nurse care
+        cursor.execute("""
+            SELECT SUM(m.vaccination_count)
+            FROM medical_record m
+            JOIN patients p ON m.medical_record_id = p.medical_record_id
+            JOIN cares c ON p.patient_id = c.patient_id
+        """)
+        total_vaccinations = cursor.fetchone()[0]
+
+        # 5. Average vaccination count per nurse (using a subquery grouped by nurse_id)
+        cursor.execute("""
+            SELECT AVG(avg_vacc) 
+            FROM (
+                SELECT AVG(m.vaccination_count) AS avg_vacc 
+                FROM medical_record m
+                JOIN patients p ON m.medical_record_id = p.medical_record_id
+                JOIN cares c ON p.patient_id = c.patient_id
+                GROUP BY c.nurse_id
+            ) AS sub
+        """)
+        avg_vaccination_per_nurse = cursor.fetchone()[0]
+
+        return render_template("nurse_stats.html", 
+                               total_nurses=total_nurses, 
+                               avg_patients_per_nurse=avg_patients_per_nurse,
+                               min_height=min_height, 
+                               max_height=max_height, 
+                               avg_height=avg_height,
+                               total_vaccinations=total_vaccinations, 
+                               avg_vaccination_per_nurse=avg_vaccination_per_nurse)
+    except Exception as e:
+        return f"Error generating nurse statistics: {str(e)}"
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+# PATIENT STATISTICS
+@app.route("/stats/patient")
+@login_required(role="patient")
+def patient_stats():
+    try:
+        # In this example we assume that a patient user record
+        # contains their patient_id stored in the session.
+        # (You may need to adjust how you link users to patients.)
+        patient_id = session["user"].get("patient_id")
+        if not patient_id:
+            return "Patient ID not found in session", 400
+
+        connection = get_connection()
+        cursor = connection.cursor()
+        # 1. Number of appointments for this patient
+        cursor.execute("SELECT COUNT(*) FROM appointments WHERE patient_id = %s", (patient_id,))
+        appointments_count = cursor.fetchone()[0]
+
+        # 2. Number of prescriptions received
+        cursor.execute("SELECT COUNT(*) FROM prescriptions WHERE patient_id = %s", (patient_id,))
+        prescriptions_count = cursor.fetchone()[0]
+
+        # 3. Total dosage amount from prescriptions (SUM)
+        cursor.execute("SELECT SUM(dosage) FROM prescriptions WHERE patient_id = %s", (patient_id,))
+        total_dosage = cursor.fetchone()[0]
+
+        # 4. Average prescription dosage (AVG)
+        cursor.execute("SELECT AVG(dosage) FROM prescriptions WHERE patient_id = %s", (patient_id,))
+        avg_dosage = cursor.fetchone()[0]
+
+        # 5. Number of treatments received (from the treats table)
+        cursor.execute("SELECT COUNT(*) FROM treats WHERE patient_id = %s", (patient_id,))
+        treatments_count = cursor.fetchone()[0]
+
+        return render_template("patient_stats.html",
+                               appointments_count=appointments_count,
+                               prescriptions_count=prescriptions_count,
+                               total_dosage=total_dosage,
+                               avg_dosage=avg_dosage,
+                               treatments_count=treatments_count)
+    except Exception as e:
+        return f"Error generating patient statistics: {str(e)}"
+    finally:
+        if 'connection' in locals():
+            connection.close()
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
