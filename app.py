@@ -265,6 +265,24 @@ def login_required(role=None):
         return decorated_function
     return wrapper
 
+@app.route("/admin/create_user", methods=["GET", "POST"])
+@login_required(role="admin")
+def admin_create_user():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        role = request.form["role"]
+        
+        try:
+            create_user(username, password, role)
+            flash(f"User '{username}' created successfully as {role}.")
+            return redirect("/admin/create_user")
+        except Exception as e:
+            flash(f"Error creating user: {str(e)}")
+    
+    return render_template("admin_create_user.html")
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
