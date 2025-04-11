@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, session, url_for
 from mysql_connection import get_connection
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 import os
 
 app = Flask(__name__)
@@ -193,6 +195,76 @@ def list_patients():
     finally:
         if 'connection' in locals():
             connection.close()
+
+# Adds user to user table
+def create_user(username, password, role):
+    connection = get_connection()
+    cursor = connection.cursor()
+    hashed_pw = generate_password_hash(password)
+    sql = "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)"
+    cursor.execute(sql, (username, hashed_pw, role))
+    connection.commit()
+    connection.close()
+
+def validate_user(username, password):
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT user_id, password_hash, FROM users WHERE username = %s", (username,))
+    result = cursor.fetchone()
+    connection.close()
+    if result and check_password_hash(result[1], password):
+        return {"user_id": result[0], "username": username, "role": result[2]}
+    return None
+
+@app.route("/signup", methods = ["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        role = request.form["role"]
+        create_user(username, password, role)
+        return redirect("/login")
+    return render_template("signup.html")
+
+@app.route("/login", methods = ["GET", "POST"])
+def login():
+    if request.method == "POST":
+        user = validate_user(request.form["username"], request.form["password"])
+        if user:
+            session["user"] = user
+            return redirect("/list")
+        else:
+            flash("Invalid credentials.")
+    return render_template("login.html")
+
+@app.route("/change_password", methods = ["GET", "POST"])
+def change_password():
+    if "user" not in session:
+        return redirect("/login")
+    if request.method == "POST":
+        new_password = request.form["new_password"]
+        hashed_password = generate_password_hash(new_password)
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute("UPDATE users SET password_hash = %s WHERE user_id = %s", (hashed_password, session["user"]["user_id"]))
+        connection.commit()
+        connection.close()
+        flash("Password changed successfully")
+        return redirect("/list")
+    return render_template("change_password.html")
+
+def login_required(role=None):
+    def wrapper(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if "user" not in session:
+                return redirect("/login")
+            if role and session["user"]["role"] != role:
+                return "Access Denied", 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return wrapper
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
