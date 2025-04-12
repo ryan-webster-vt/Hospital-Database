@@ -267,7 +267,7 @@ def login_required(role=None):
     return wrapper
 
 @app.route("/admin/create_user", methods=["GET", "POST"])
-@login_required(role="admin")
+#@login_required(role="admin")
 def admin_create_user():
     if request.method == "POST":
         username = request.form["username"]
@@ -289,7 +289,7 @@ def admin_create_user():
 
 # ADMIN STATISTICS
 @app.route("/stats/admin")
-@login_required(role="admin")
+#@login_required(role="admin")
 def admin_stats():
     try:
         connection = get_connection()
@@ -329,7 +329,7 @@ def admin_stats():
 
 # DOCTOR STATISTICS
 @app.route("/stats/doctor")
-@login_required(role="doctor")
+#@login_required(role="doctor")
 def doctor_stats():
     try:
         connection = get_connection()
@@ -379,7 +379,7 @@ def doctor_stats():
 
 # NURSE STATISTICS
 @app.route("/stats/nurse")
-@login_required(role="nurse")
+#@login_required(role="nurse")
 def nurse_stats():
     try:
         connection = get_connection()
@@ -442,7 +442,7 @@ def nurse_stats():
 
 # PATIENT STATISTICS
 @app.route("/stats/patient")
-@login_required(role="patient")
+#@login_required(role="patient")
 def patient_stats():
     try:
         # In this example we assume that a patient user record

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Database - Doctor Statistics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .message {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+        }
+        h1, h2 {
+            color: #000000;
+        }
+        .section {
+            margin-top: 30px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .stat-card {
+            background-color: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .stat-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .stat-value {
+            font-size: 24px;
+            color: #4CAF50;
+        }
+        .stat-description {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #4CAF50;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        @media (max-width: 600px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Hospital Database System</h1>
+    <div class="nav-links">
+        <a href="/list">Back to Patient List</a>
+    </div>
+
+    <div class="section">
+        <h2>Doctor Statistics Dashboard</h2>
+        
+        <div class="dashboard">
+            <div class="stat-card">
+                <div class="stat-title">Total Doctors</div>
+                <div class="stat-value">{{ total_doctors }}</div>
+                <div class="stat-description">Number of doctors in the hospital</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Average Patients per Doctor</div>
+                <div class="stat-value">{{ "%.1f"|format(avg_patients|float) if avg_patients else '0.0' }}</div>
+                <div class="stat-description">Average number of patients treated by each doctor</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Average Bill Amount per Doctor</div>
+                <div class="stat-value">${{ "%.2f"|format(avg_bill_per_doctor|float) if avg_bill_per_doctor else '0.00' }}</div>
+                <div class="stat-description">Average billing amount per doctor</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Prescription Dosage Range</div>
+                <div class="stat-value">
+                    {{ "%.1f"|format(min_dosage|float) if min_dosage else '0.0' }} - 
+                    {{ "%.1f"|format(max_dosage|float) if max_dosage else '0.0' }}
+                </div>
+                <div class="stat-description">Minimum and maximum prescription dosages</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Average Dosage</div>
+                <div class="stat-value">{{ "%.1f"|format(avg_dosage|float) if avg_dosage else '0.0' }}</div>
+                <div class="stat-description">Average prescription dosage</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Average Prescriptions per Doctor</div>
+                <div class="stat-value">{{ "%.1f"|format(avg_prescriptions_per_doctor|float) if avg_prescriptions_per_doctor else '0.0' }}</div>
+                <div class="stat-description">Average number of prescriptions issued by each doctor</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

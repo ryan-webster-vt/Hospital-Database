@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Database - Admin Statistics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .message {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+        }
+        h1, h2 {
+            color: #000000;
+        }
+        .section {
+            margin-top: 30px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .stat-card {
+            background-color: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .stat-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .stat-value {
+            font-size: 24px;
+            color: #4CAF50;
+        }
+        .stat-description {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #4CAF50;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        @media (max-width: 600px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Hospital Database System</h1>
+    <div class="nav-links">
+        <a href="/list">Back to Patient List</a>
+    </div>
+
+    <div class="section">
+        <h2>Admin Statistics Dashboard</h2>
+        
+        <div class="dashboard">
+            <div class="stat-card">
+                <div class="stat-title">Total Patients</div>
+                <div class="stat-value">{{ total_patients }}</div>
+                <div class="stat-description">Number of patients registered in the system</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Average Patient Age</div>
+                <div class="stat-value">{{ "%.1f"|format(avg_age|float) }}</div>
+                <div class="stat-description">Average age of all patients (years)</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Total Billing Amount</div>
+                <div class="stat-value">${{ "%.2f"|format(total_bills|float) if total_bills else '0.00' }}</div>
+                <div class="stat-description">Total gross billing amount</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Bill Range</div>
+                <div class="stat-value">
+                    ${{ "%.2f"|format(min_bill|float) if min_bill else '0.00' }} - ${{ "%.2f"|format(max_bill|float) if max_bill else '0.00' }}
+                </div>
+                <div class="stat-description">Minimum and maximum bill amounts</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title">Average Vaccinations</div>
+                <div class="stat-value">{{ "%.1f"|format(avg_vaccinations|float) if avg_vaccinations else '0.0' }}</div>
+                <div class="stat-description">Average vaccination count per patient</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
