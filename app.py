@@ -485,5 +485,159 @@ def patient_stats():
         if 'connection' in locals():
             connection.close()
 
+# --------------------------
+# Appointment Management Routes
+# --------------------------
+
+@app.route("/appointments")
+def list_appointments():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        
+        # Get appointments with patient names
+        cursor.execute("""
+            SELECT a.appointment_id, a.date, a.time, a.patient_id, 
+                   p.first_name, p.last_name
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.patient_id
+            ORDER BY a.date ASC, a.time ASC
+        """)
+        appointments = cursor.fetchall()
+        
+        # Get patients for the dropdown
+        cursor.execute("""
+            SELECT patient_id, first_name, middle_name, last_name
+            FROM patients
+            ORDER BY last_name, first_name
+        """)
+        patients = cursor.fetchall()
+        
+        # Check if there's a message in the URL parameters
+        message = request.args.get('message')
+        
+        return render_template("appointments.html", 
+                             appointments=appointments,
+                             patients=patients,
+                             message=message)
+    except Exception as e:
+        return render_template("appointments.html", message=f"Error listing appointments: {str(e)}")
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+@app.route("/appointments/add", methods=["POST"])
+def add_appointment():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        
+        patient_id = request.form['patient_id']
+        appointment_date = request.form['date']
+        appointment_time = request.form['time']
+        
+        # First check if patient exists
+        cursor.execute("SELECT first_name, last_name FROM patients WHERE patient_id = %s", (patient_id,))
+        patient = cursor.fetchone()
+        
+        if not patient:
+            return redirect("/appointments?message=No patient found with that ID")
+        
+        # Insert the appointment
+        sql = """INSERT INTO appointments 
+                (date, time, patient_id) 
+                VALUES (%s, %s, %s)"""
+        
+        data = (
+            appointment_date,
+            appointment_time,
+            patient_id
+        )
+        
+        cursor.execute(sql, data)
+        connection.commit()
+        
+        appointment_id = cursor.lastrowid
+        
+        return redirect(f"/appointments?message=Appointment added successfully for {patient[0]} {patient[1]} at {appointment_time} on {appointment_date}")
+    except Exception as e:
+        return redirect(f"/appointments?message=Error adding appointment: {str(e)}")
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+@app.route("/appointments/update", methods=["POST"])
+def update_appointment():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        
+        appointment_id = request.form['appointment_id']
+        patient_id = request.form['patient_id']
+        appointment_date = request.form['date']
+        appointment_time = request.form['time']
+        
+        # First check if patient exists
+        cursor.execute("SELECT first_name, last_name FROM patients WHERE patient_id = %s", (patient_id,))
+        patient = cursor.fetchone()
+        
+        if not patient:
+            return redirect("/appointments?message=No patient found with that ID")
+        
+        # Update the appointment
+        sql = """UPDATE appointments
+                SET date = %s, time = %s, patient_id = %s
+                WHERE appointment_id = %s"""
+        
+        data = (
+            appointment_date,
+            appointment_time,
+            patient_id,
+            appointment_id
+        )
+        
+        cursor.execute(sql, data)
+        connection.commit()
+        
+        return redirect(f"/appointments?message=Appointment updated successfully for {patient[0]} {patient[1]}")
+    except Exception as e:
+        return redirect(f"/appointments?message=Error updating appointment: {str(e)}")
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+@app.route("/appointments/delete", methods=["POST"])
+def delete_appointment():
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        
+        appointment_id = request.form['appointment_id']
+        
+        # First get appointment details for confirmation message
+        cursor.execute("""
+            SELECT a.date, a.time, p.first_name, p.last_name 
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.patient_id
+            WHERE a.appointment_id = %s
+        """, (appointment_id,))
+        
+        appointment = cursor.fetchone()
+        
+        if not appointment:
+            return redirect("/appointments?message=No appointment found with that ID")
+        
+        # Delete the appointment
+        sql = "DELETE FROM appointments WHERE appointment_id = %s"
+        cursor.execute(sql, (appointment_id,))
+        connection.commit()
+        
+        return redirect(f"/appointments?message=Appointment for {appointment[2]} {appointment[3]} on {appointment[0]} at {appointment[1]} deleted successfully")
+    except Exception as e:
+        return redirect(f"/appointments?message=Error deleting appointment: {str(e)}")
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5001)

@@ -264,6 +264,7 @@
         </div>
         <ul class="sidebar-nav">
             <li class="active"><a href="/list">Patient List</a></li>
+            <li><a href="/appointments">Appointments</a></li>
             <li><a href="/stats/admin">Admin Statistics</a></li>
             <li><a href="/stats/doctor">Doctor Statistics</a></li>
             <li><a href="/stats/nurse">Nurse Statistics</a></li>
@@ -302,16 +303,15 @@
                 <tbody>
                     {% if patients %}
                         {% for patient in patients %}
-                        <tr class="clickable" onclick="openPatientModal(
-                            '{{ patient[0] }}', 
-                            '{{ patient[1] }}', 
-                            '{{ patient[3] }}', 
-                            '{{ patient[6] if patient[6] else 'N/A' }}', 
-                            '{{ patient[7] if patient[7] else '0' }}', 
-                            '{{ patient[9] if patient[9] else '0' }}', 
-                            '{{ patient[6] }}', 
-                            '{{ patient[10] if patient[10] else '' }}'
-                        )">
+                        <tr class="clickable" data-patient-id="{{ patient[0] }}"
+                            data-first-name="{{ patient[1] }}"
+                            data-last-name="{{ patient[3] }}"
+                            data-sex="{{ patient[6] if patient[6] else 'N/A' }}"
+                            data-height="{{ patient[7] if patient[7] else '0' }}"
+                            data-vacc="{{ patient[9] if patient[9] else '0' }}"
+                            data-sex-code="{{ patient[6] }}"
+                            data-medical-id="{{ patient[10] if patient[10] else '' }}"
+                            onclick="openPatientModalFromData(this)">
                             <td>{{ patient[0] }}</td>
                             <td>{{ patient[1] }}</td>
                             <td>{{ patient[2] if patient[2] else '-' }}</td>
@@ -320,7 +320,9 @@
                             <td>{{ patient[5] }}</td>
                             <td>{{ patient[8] if patient[8] else "-" }}</td>
                             <td class="actions-cell" onclick="event.stopPropagation()">
-                                <span class="delete-icon" onclick="showDeleteConfirmation({{ patient[0] }}, '{{ patient[1] }} {{ patient[3] }}')">🗑️</span>
+                                <span class="delete-icon" data-patient-id="{{ patient[0] }}" 
+                                      data-patient-name="{{ patient[1] }} {{ patient[3] }}"
+                                      onclick="showDeleteConfirmationFromData(this)">🗑️</span>
                             </td>
                         </tr>
                         {% endfor %}
@@ -525,7 +527,16 @@
             addPatientSection.classList.add("hidden");
         }
         
-        // Function to show delete confirmation
+        // Function to show delete confirmation using data attributes
+        function showDeleteConfirmationFromData(element) {
+            var patientId = element.getAttribute("data-patient-id");
+            var patientName = element.getAttribute("data-patient-name");
+            document.getElementById("deletePatientId").value = patientId;
+            document.getElementById("deletePatientName").textContent = patientName;
+            deleteModal.style.display = "block";
+        }
+        
+        // Function for backward compatibility
         function showDeleteConfirmation(patientId, patientName) {
             document.getElementById("deletePatientId").value = patientId;
             document.getElementById("deletePatientName").textContent = patientName;
@@ -537,8 +548,17 @@
             deleteModal.style.display = "none";
         }
         
-        // Function to open the patient modal with medical record data
-        function openPatientModal(patientId, firstName, lastName, sex, height, vaccinations, hasMedicalRecord, medicalRecordId) {
+        // Function to open the patient modal with medical record data using data attributes
+        function openPatientModalFromData(element) {
+            var patientId = element.getAttribute("data-patient-id");
+            var firstName = element.getAttribute("data-first-name");
+            var lastName = element.getAttribute("data-last-name");
+            var sex = element.getAttribute("data-sex");
+            var height = element.getAttribute("data-height");
+            var vaccinations = element.getAttribute("data-vacc");
+            var sexCode = element.getAttribute("data-sex-code");
+            var medicalRecordId = element.getAttribute("data-medical-id");
+            
             document.getElementById("modalPatientName").textContent = firstName + " " + lastName;
             document.getElementById("modalPatientId").textContent = patientId;
             document.getElementById("modalPatientSex").textContent = sex;
@@ -549,7 +569,31 @@
             document.getElementById("updatePatientId").value = patientId;
             
             // Always populate the form with current values
-            document.getElementById("updateSex").value = sex === 'M' || sex === 'F' ? sex : 'M';
+            document.getElementById("updateSex").value = sexCode === 'M' || sexCode === 'F' ? sexCode : 'M';
+            document.getElementById("updateHeight").value = height !== 'N/A' ? height : '';
+            document.getElementById("updateVaccinations").value = vaccinations !== '0' ? vaccinations : '0';
+            
+            // If patient has a medical record, set the medical record ID
+            if (medicalRecordId) {
+                document.getElementById("currentMedicalRecordId").value = medicalRecordId;
+            }
+            
+            patientModal.style.display = "block";
+        }
+        
+        // Function for backward compatibility
+        function openPatientModal(patientId, firstName, lastName, sex, height, vaccinations, sexCode, medicalRecordId) {
+            document.getElementById("modalPatientName").textContent = firstName + " " + lastName;
+            document.getElementById("modalPatientId").textContent = patientId;
+            document.getElementById("modalPatientSex").textContent = sex;
+            document.getElementById("modalPatientHeight").textContent = height;
+            document.getElementById("modalPatientVaccinations").textContent = vaccinations;
+            
+            // Set patient ID in the form
+            document.getElementById("updatePatientId").value = patientId;
+            
+            // Always populate the form with current values
+            document.getElementById("updateSex").value = sexCode === 'M' || sexCode === 'F' ? sexCode : 'M';
             document.getElementById("updateHeight").value = height !== 'N/A' ? height : '';
             document.getElementById("updateVaccinations").value = vaccinations !== '0' ? vaccinations : '0';
             
