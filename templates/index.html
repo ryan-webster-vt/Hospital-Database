@@ -7,9 +7,47 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            padding-top: 20px;
+            min-height: 100vh;
+        }
+        .sidebar-header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #555;
+            margin-bottom: 20px;
+        }
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar-nav li {
+            padding: 10px 20px;
+            border-bottom: 1px solid #444;
+        }
+        .sidebar-nav li:hover {
+            background-color: #444;
+        }
+        .sidebar-nav li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+        .sidebar-nav .active {
+            background-color: #4CAF50;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
         }
         .message {
             padding: 10px;
@@ -220,190 +258,205 @@
     </style>
 </head>
 <body>
-    <h1>Hospital Database System</h1>
-
-    {% if message and message != "Hospital Database System" %}
-    <div class="status-message">
-        {{ message }}
-    </div>
-    {% endif %}
-    
-    <div class="section">
-        <div class="action-buttons">
-            <h2>Patient List</h2>
-            <div class="action-icon" onclick="showAddPatientForm()">+</div>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>Hospital DB</h3>
         </div>
-        <p>Click on a patient to view or update their medical record</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>First Name</th>
-                    <th>Middle Name</th>
-                    <th>Last Name</th>
-                    <th>Date of Birth</th>
-                    <th>Phone Number</th>
-                    <th>Insurance</th>
-                    <th class="actions-cell">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if patients %}
-                    {% for patient in patients %}
-                    <tr class="clickable" onclick="openPatientModal(
-                        '{{ patient[0] }}', 
-                        '{{ patient[1] }}', 
-                        '{{ patient[3] }}', 
-                        '{{ patient[6] if patient[6] else 'N/A' }}', 
-                        '{{ patient[7] if patient[7] else '0' }}', 
-                        '{{ patient[9] if patient[9] else '0' }}', 
-                        '{{ patient[6] }}', 
-                        '{{ patient[10] if patient[10] else '' }}'
-                    )">
-                        <td>{{ patient[0] }}</td>
-                        <td>{{ patient[1] }}</td>
-                        <td>{{ patient[2] if patient[2] else '-' }}</td>
-                        <td>{{ patient[3] }}</td>
-                        <td>{{ patient[4] }}</td>
-                        <td>{{ patient[5] }}</td>
-                        <td>{{ patient[8] if patient[8] else "-" }}</td>
-                        <td class="actions-cell" onclick="event.stopPropagation()">
-                            <span class="delete-icon" onclick="showDeleteConfirmation({{ patient[0] }}, '{{ patient[1] }} {{ patient[3] }}')">🗑️</span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
+        <ul class="sidebar-nav">
+            <li class="active"><a href="/list">Patient List</a></li>
+            <li><a href="/stats/admin">Admin Statistics</a></li>
+            <li><a href="/stats/doctor">Doctor Statistics</a></li>
+            <li><a href="/stats/nurse">Nurse Statistics</a></li>
+            <li><a href="/stats/patient">Patient Statistics</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <h1>Hospital Database System</h1>
+
+        {% if message and message != "Hospital Database System" %}
+        <div class="status-message">
+            {{ message }}
+        </div>
+        {% endif %}
+        
+        <div class="section">
+            <div class="action-buttons">
+                <h2>Patient List</h2>
+                <div class="action-icon" onclick="showAddPatientForm()">+</div>
+            </div>
+            <p>Click on a patient to view or update their medical record</p>
+            <table>
+                <thead>
                     <tr>
-                        <td colspan="8" style="text-align: center;">No patients found</td>
+                        <th>ID</th>
+                        <th>First Name</th>
+                        <th>Middle Name</th>
+                        <th>Last Name</th>
+                        <th>Date of Birth</th>
+                        <th>Phone Number</th>
+                        <th>Insurance</th>
+                        <th class="actions-cell">Actions</th>
                     </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Add Patient Form Section (Initially Hidden) -->
-    <div id="addPatientSection" class="section hidden">
-        <h2>Add New Patient</h2>
-        <form action="/insert" method="post">
-            <div class="form-group">
-                <label>First Name:</label>
-                <input type="text" name="first_name" required>
-            </div>
-            <div class="form-group">
-                <label>Middle Name:</label>
-                <input type="text" name="middle_name">
-            </div>
-            <div class="form-group">
-                <label>Last Name:</label>
-                <input type="text" name="last_name" required>
-            </div>
-            <div class="form-group">
-                <label>Date of Birth:</label>
-                <input type="date" name="date_of_birth" required>
-            </div>
-            <div class="form-group">
-                <label>Phone Number:</label>
-                <input type="text" name="phone_number" placeholder="555-1234" required>
-            </div>
-            <div class="form-group">
-                <label>Insurance:</label>
-                <select name="insurance_id">
-                    <option value="">-- Select Insurance --</option>
-                    {% if insurances %}
-                        {% for insurance in insurances %}
-                            <option value="{{ insurance[0] }}">{{ insurance[1] }}</option>
+                </thead>
+                <tbody>
+                    {% if patients %}
+                        {% for patient in patients %}
+                        <tr class="clickable" onclick="openPatientModal(
+                            '{{ patient[0] }}', 
+                            '{{ patient[1] }}', 
+                            '{{ patient[3] }}', 
+                            '{{ patient[6] if patient[6] else 'N/A' }}', 
+                            '{{ patient[7] if patient[7] else '0' }}', 
+                            '{{ patient[9] if patient[9] else '0' }}', 
+                            '{{ patient[6] }}', 
+                            '{{ patient[10] if patient[10] else '' }}'
+                        )">
+                            <td>{{ patient[0] }}</td>
+                            <td>{{ patient[1] }}</td>
+                            <td>{{ patient[2] if patient[2] else '-' }}</td>
+                            <td>{{ patient[3] }}</td>
+                            <td>{{ patient[4] }}</td>
+                            <td>{{ patient[5] }}</td>
+                            <td>{{ patient[8] if patient[8] else "-" }}</td>
+                            <td class="actions-cell" onclick="event.stopPropagation()">
+                                <span class="delete-icon" onclick="showDeleteConfirmation({{ patient[0] }}, '{{ patient[1] }} {{ patient[3] }}')">🗑️</span>
+                            </td>
+                        </tr>
                         {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" style="text-align: center;">No patients found</td>
+                        </tr>
                     {% endif %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Sex:</label>
-                <select name="sex" required>
-                    <option value="M">Male</option>
-                    <option value="F">Female</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Height (cm):</label>
-                <input type="number" name="height" required min="1" max="300">
-            </div>
-            <div class="form-group">
-                <label>Vaccination Count:</label>
-                <input type="number" name="vaccination_count" value="0" min="0">
-            </div>
-            <div class="form-group">
-                <button type="submit">Add Patient</button>
-                <button type="button" class="cancel-button" onclick="hideAddPatientForm()">Cancel</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="close" onclick="hideDeleteConfirmation()">&times;</span>
-                <h2>Confirm Deletion</h2>
-            </div>
-            <p>Are you sure you want to delete patient: <span id="deletePatientName"></span>?</p>
-            <p>This action cannot be undone.</p>
-            
-            <div class="confirmation-buttons">
-                <form action="/delete" method="post">
-                    <input type="hidden" id="deletePatientId" name="patient_id">
-                    <button type="submit" class="delete-button">Delete</button>
-                    <button type="button" class="cancel-button" onclick="hideDeleteConfirmation()">Cancel</button>
-                </form>
-            </div>
+                </tbody>
+            </table>
         </div>
-    </div>
 
-    <!-- Patient Medical Record Modal -->
-    <div id="patientModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="close" onclick="hidePatientModal()">&times;</span>
-                <h2 id="modalPatientName">Patient Name</h2>
-                <p>Patient ID: <span id="modalPatientId"></span></p>
-            </div>
-            
-            <div class="modal-tabs">
-                <div class="tab active" data-tab="viewRecord">View Medical Record</div>
-                <div class="tab" data-tab="updateRecord">Update Medical Record</div>
-            </div>
-            
-            <div id="viewRecord" class="tab-content active">
-                <h3>Current Medical Record</h3>
-                <div class="medical-record-info">
-                    <p>Sex: <span id="modalPatientSex"></span></p>
-                    <p>Height: <span id="modalPatientHeight"></span> cm</p>
-                    <p>Vaccination Count: <span id="modalPatientVaccinations"></span></p>
+        <!-- Add Patient Form Section (Initially Hidden) -->
+        <div id="addPatientSection" class="section hidden">
+            <h2>Add New Patient</h2>
+            <form action="/insert" method="post">
+                <div class="form-group">
+                    <label>First Name:</label>
+                    <input type="text" name="first_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Middle Name:</label>
+                    <input type="text" name="middle_name">
+                </div>
+                <div class="form-group">
+                    <label>Last Name:</label>
+                    <input type="text" name="last_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth:</label>
+                    <input type="date" name="date_of_birth" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number:</label>
+                    <input type="text" name="phone_number" placeholder="555-1234" required>
+                </div>
+                <div class="form-group">
+                    <label>Insurance:</label>
+                    <select name="insurance_id">
+                        <option value="">-- Select Insurance --</option>
+                        {% if insurances %}
+                            {% for insurance in insurances %}
+                                <option value="{{ insurance[0] }}">{{ insurance[1] }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Sex:</label>
+                    <select name="sex" required>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Height (cm):</label>
+                    <input type="number" name="height" required min="1" max="300">
+                </div>
+                <div class="form-group">
+                    <label>Vaccination Count:</label>
+                    <input type="number" name="vaccination_count" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <button type="submit">Add Patient</button>
+                    <button type="button" class="cancel-button" onclick="hideAddPatientForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close" onclick="hideDeleteConfirmation()">&times;</span>
+                    <h2>Confirm Deletion</h2>
+                </div>
+                <p>Are you sure you want to delete patient: <span id="deletePatientName"></span>?</p>
+                <p>This action cannot be undone.</p>
+                
+                <div class="confirmation-buttons">
+                    <form action="/delete" method="post">
+                        <input type="hidden" id="deletePatientId" name="patient_id">
+                        <button type="submit" class="delete-button">Delete</button>
+                        <button type="button" class="cancel-button" onclick="hideDeleteConfirmation()">Cancel</button>
+                    </form>
                 </div>
             </div>
-            
-            <div id="updateRecord" class="tab-content">
-                <h3>Update Medical Record</h3>
-                <form action="/update_medical_record" method="post">
-                    <input type="hidden" id="updatePatientId" name="patient_id">
-                    <input type="hidden" id="currentMedicalRecordId" name="medical_record_id">
-                    
-                    <div class="form-group">
-                        <label>Sex:</label>
-                        <select name="sex" id="updateSex" required>
-                            <option value="M">Male</option>
-                            <option value="F">Female</option>
-                        </select>
+        </div>
+
+        <!-- Patient Medical Record Modal -->
+        <div id="patientModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close" onclick="hidePatientModal()">&times;</span>
+                    <h2 id="modalPatientName">Patient Name</h2>
+                    <p>Patient ID: <span id="modalPatientId"></span></p>
+                </div>
+                
+                <div class="modal-tabs">
+                    <div class="tab active" data-tab="viewRecord">View Medical Record</div>
+                    <div class="tab" data-tab="updateRecord">Update Medical Record</div>
+                </div>
+                
+                <div id="viewRecord" class="tab-content active">
+                    <h3>Current Medical Record</h3>
+                    <div class="medical-record-info">
+                        <p>Sex: <span id="modalPatientSex"></span></p>
+                        <p>Height: <span id="modalPatientHeight"></span> cm</p>
+                        <p>Vaccination Count: <span id="modalPatientVaccinations"></span></p>
                     </div>
-                    <div class="form-group">
-                        <label>Height (cm):</label>
-                        <input type="number" name="height" id="updateHeight" required min="1" max="300">
-                    </div>
-                    <div class="form-group">
-                        <label>Vaccination Count:</label>
-                        <input type="number" name="vaccination_count" id="updateVaccinations" min="0">
-                    </div>
-                    <button type="submit">Update Record</button>
-                </form>
+                </div>
+                
+                <div id="updateRecord" class="tab-content">
+                    <h3>Update Medical Record</h3>
+                    <form action="/update_medical_record" method="post">
+                        <input type="hidden" id="updatePatientId" name="patient_id">
+                        <input type="hidden" id="currentMedicalRecordId" name="medical_record_id">
+                        
+                        <div class="form-group">
+                            <label>Sex:</label>
+                            <select name="sex" id="updateSex" required>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Height (cm):</label>
+                            <input type="number" name="height" id="updateHeight" required min="1" max="300">
+                        </div>
+                        <div class="form-group">
+                            <label>Vaccination Count:</label>
+                            <input type="number" name="vaccination_count" id="updateVaccinations" min="0">
+                        </div>
+                        <button type="submit">Update Record</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

@@ -7,9 +7,47 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            padding-top: 20px;
+            min-height: 100vh;
+        }
+        .sidebar-header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #555;
+            margin-bottom: 20px;
+        }
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar-nav li {
+            padding: 10px 20px;
+            border-bottom: 1px solid #444;
+        }
+        .sidebar-nav li:hover {
+            background-color: #444;
+        }
+        .sidebar-nav li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+        .sidebar-nav .active {
+            background-color: #4CAF50;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
         }
         .message {
             padding: 10px;
@@ -71,52 +109,64 @@
     </style>
 </head>
 <body>
-    <h1>Hospital Database System</h1>
-    <div class="nav-links">
-        <a href="/list">Back to Patient List</a>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>Hospital DB</h3>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="/list">Patient List</a></li>
+            <li><a href="/stats/admin">Admin Statistics</a></li>
+            <li class="active"><a href="/stats/doctor">Doctor Statistics</a></li>
+            <li><a href="/stats/nurse">Nurse Statistics</a></li>
+            <li><a href="/stats/patient">Patient Statistics</a></li>
+        </ul>
     </div>
 
-    <div class="section">
-        <h2>Doctor Statistics Dashboard</h2>
-        
-        <div class="dashboard">
-            <div class="stat-card">
-                <div class="stat-title">Total Doctors</div>
-                <div class="stat-value">{{ total_doctors }}</div>
-                <div class="stat-description">Number of doctors in the hospital</div>
-            </div>
+    <div class="main-content">
+        <h1>Hospital Database System</h1>
+
+        <div class="section">
+            <h2>Doctor Statistics Dashboard</h2>
             
-            <div class="stat-card">
-                <div class="stat-title">Average Patients per Doctor</div>
-                <div class="stat-value">{{ "%.1f"|format(avg_patients|float) if avg_patients else '0.0' }}</div>
-                <div class="stat-description">Average number of patients treated by each doctor</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-title">Average Bill Amount per Doctor</div>
-                <div class="stat-value">${{ "%.2f"|format(avg_bill_per_doctor|float) if avg_bill_per_doctor else '0.00' }}</div>
-                <div class="stat-description">Average billing amount per doctor</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-title">Prescription Dosage Range</div>
-                <div class="stat-value">
-                    {{ "%.1f"|format(min_dosage|float) if min_dosage else '0.0' }} - 
-                    {{ "%.1f"|format(max_dosage|float) if max_dosage else '0.0' }}
+            <div class="dashboard">
+                <div class="stat-card">
+                    <div class="stat-title">Total Doctors</div>
+                    <div class="stat-value">{{ total_doctors }}</div>
+                    <div class="stat-description">Number of doctors in the hospital</div>
                 </div>
-                <div class="stat-description">Minimum and maximum prescription dosages</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-title">Average Dosage</div>
-                <div class="stat-value">{{ "%.1f"|format(avg_dosage|float) if avg_dosage else '0.0' }}</div>
-                <div class="stat-description">Average prescription dosage</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-title">Average Prescriptions per Doctor</div>
-                <div class="stat-value">{{ "%.1f"|format(avg_prescriptions_per_doctor|float) if avg_prescriptions_per_doctor else '0.0' }}</div>
-                <div class="stat-description">Average number of prescriptions issued by each doctor</div>
+                
+                <div class="stat-card">
+                    <div class="stat-title">Average Patients per Doctor</div>
+                    <div class="stat-value">{{ "%.1f"|format(avg_patients|float) if avg_patients else '0.0' }}</div>
+                    <div class="stat-description">Average number of patients treated by each doctor</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title">Average Bill Amount per Doctor</div>
+                    <div class="stat-value">${{ "%.2f"|format(avg_bill_per_doctor|float) if avg_bill_per_doctor else '0.00' }}</div>
+                    <div class="stat-description">Average billing amount per doctor</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title">Prescription Dosage Range</div>
+                    <div class="stat-value">
+                        {{ "%.1f"|format(min_dosage|float) if min_dosage else '0.0' }} - 
+                        {{ "%.1f"|format(max_dosage|float) if max_dosage else '0.0' }}
+                    </div>
+                    <div class="stat-description">Minimum and maximum prescription dosages</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title">Average Dosage</div>
+                    <div class="stat-value">{{ "%.1f"|format(avg_dosage|float) if avg_dosage else '0.0' }}</div>
+                    <div class="stat-description">Average prescription dosage</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-title">Average Prescriptions per Doctor</div>
+                    <div class="stat-value">{{ "%.1f"|format(avg_prescriptions_per_doctor|float) if avg_prescriptions_per_doctor else '0.0' }}</div>
+                    <div class="stat-description">Average number of prescriptions issued by each doctor</div>
+                </div>
             </div>
         </div>
     </div>

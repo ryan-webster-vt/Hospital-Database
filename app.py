@@ -210,7 +210,7 @@ def create_user(username, password, role):
 def validate_user(username, password):
     connection = get_connection()
     cursor = connection.cursor()
-    cursor.execute("SELECT user_id, password_hash, FROM users WHERE username = %s", (username,))
+    cursor.execute("SELECT user_id, password_hash, role FROM users WHERE username = %s", (username,))
     result = cursor.fetchone()
     connection.close()
     if result and check_password_hash(result[1], password):
@@ -445,15 +445,14 @@ def nurse_stats():
 #@login_required(role="patient")
 def patient_stats():
     try:
-        # In this example we assume that a patient user record
-        # contains their patient_id stored in the session.
-        # (You may need to adjust how you link users to patients.)
-        patient_id = session["user"].get("patient_id")
-        if not patient_id:
-            return "Patient ID not found in session", 400
-
+        # For demonstration purposes, we'll show stats for a mock patient
+        # Later this would be tied to the logged-in user's patient ID
         connection = get_connection()
         cursor = connection.cursor()
+        
+        # Use a sample patient ID for now
+        patient_id = 1  # Sample patient ID
+        
         # 1. Number of appointments for this patient
         cursor.execute("SELECT COUNT(*) FROM appointments WHERE patient_id = %s", (patient_id,))
         appointments_count = cursor.fetchone()[0]
