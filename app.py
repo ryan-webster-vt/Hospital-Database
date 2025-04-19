@@ -159,6 +159,7 @@ def delete():
             connection.close()
 
 @app.route("/list")
+#@login_required(role="patient")
 def list_patients():
     try:
         connection = get_connection()
@@ -238,6 +239,12 @@ def login():
             flash("Invalid credentials.")
     return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been logged out successfully.")
+    return redirect("/login")
+
 @app.route("/change_password", methods = ["GET", "POST"])
 def change_password():
     if "user" not in session:
@@ -250,7 +257,7 @@ def change_password():
         cursor.execute("UPDATE users SET password_hash = %s WHERE user_id = %s", (hashed_password, session["user"]["user_id"]))
         connection.commit()
         connection.close()
-        flash("Password changed successfully")
+        flash("Password changed successfully.")
         return redirect("/list")
     return render_template("change_password.html")
 

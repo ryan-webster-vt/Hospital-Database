@@ -270,6 +270,13 @@
             <li><a href="/stats/nurse">Nurse Statistics</a></li>
             <li><a href="/stats/patient">Patient Statistics</a></li>
         </ul>
+
+        {% if session.user %}
+        <div style="padding: 10px 20px; text-align: center; margin-top: 20px; border-top: 1px solid #555;">
+            <p>Logged in as: {{ session.user.username }}</p>
+            <p>Role: {{ session.user.role }}</p>
+        </div>
+        {% endif %}
     </div>
 
     <div class="main-content">
