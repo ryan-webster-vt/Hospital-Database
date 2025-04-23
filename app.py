@@ -10,6 +10,7 @@ app.secret_key = os.urandom(24)
 @app.route("/")
 def index():
     # Redirect to the list route to always show patients
+    username = session.get('user')
     return redirect("/list")
 
 @app.route("/insert", methods=["POST"])
@@ -241,7 +242,7 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session.clear()
+    session.pop("username", None)
     flash("You have been logged out successfully.")
     return redirect("/login")
 
