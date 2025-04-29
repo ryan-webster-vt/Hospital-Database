@@ -309,3 +309,34 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2025-04-01 19:53:03
+
+-- Add users table for authentication
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL UNIQUE,
+  `password_hash` varchar(255) NOT NULL,
+  `role` varchar(20) NOT NULL,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- First, modify the users table to add the patient_id column
+ALTER TABLE `users` 
+ADD COLUMN `patient_id` int DEFAULT NULL,
+ADD CONSTRAINT `fk_users_patients` 
+FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) 
+ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Now update the sample users to link them to specific patients
+-- We'll leave admin and doctor with no patient_id (NULL)
+-- Update the nurse user to NULL as well
+-- Link the patient user to patient_id 23 (John Smith from the patients table)
+UPDATE `users` SET `patient_id` = NULL WHERE `username` = 'admin';
+UPDATE `users` SET `patient_id` = NULL WHERE `username` = 'doctor';
+UPDATE `users` SET `patient_id` = NULL WHERE `username` = 'nurse';
+UPDATE `users` SET `patient_id` = 23 WHERE `username` = 'patient';
+
+-- Optional: Create more patient users linked to other patient records
+INSERT INTO `users` (`username`, `password_hash`, `role`, `patient_id`) VALUES
+('emma.johnson', 'pbkdf2:sha256:600000$TUXfG5O1X5O7$dc94dd1896ab5aa4650198a4c728cdc11b99acbb6ffb24eb2a99b61a30399ab3', 'patient', 24),
+('liam.williams', 'pbkdf2:sha256:600000$TUXfG5O1X5O7$dc94dd1896ab5aa4650198a4c728cdc11b99acbb6ffb24eb2a99b61a30399ab3', 'patient', 25);
