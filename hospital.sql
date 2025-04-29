@@ -327,16 +327,6 @@ ADD CONSTRAINT `fk_users_patients`
 FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) 
 ON DELETE SET NULL ON UPDATE CASCADE;
 
--- Now update the sample users to link them to specific patients
--- We'll leave admin and doctor with no patient_id (NULL)
--- Update the nurse user to NULL as well
--- Link the patient user to patient_id 23 (John Smith from the patients table)
-UPDATE `users` SET `patient_id` = NULL WHERE `username` = 'admin';
-UPDATE `users` SET `patient_id` = NULL WHERE `username` = 'doctor';
-UPDATE `users` SET `patient_id` = NULL WHERE `username` = 'nurse';
-UPDATE `users` SET `patient_id` = 23 WHERE `username` = 'patient';
-
--- Optional: Create more patient users linked to other patient records
-INSERT INTO `users` (`username`, `password_hash`, `role`, `patient_id`) VALUES
-('emma.johnson', 'pbkdf2:sha256:600000$TUXfG5O1X5O7$dc94dd1896ab5aa4650198a4c728cdc11b99acbb6ffb24eb2a99b61a30399ab3', 'patient', 24),
-('liam.williams', 'pbkdf2:sha256:600000$TUXfG5O1X5O7$dc94dd1896ab5aa4650198a4c728cdc11b99acbb6ffb24eb2a99b61a30399ab3', 'patient', 25);
+-- Insert the default admin account
+INSERT INTO `users` (`username`, `password_hash`, `role`) 
+VALUES ('admin', 'scrypt:32768:8:1$6rXjzlzuEviqOyyR$0461969c37c933e233b3ab74a4517afd1d1ccc0a26dcf6da5e518cc05c834086206117cde3a3c167982c063bff2015f61197afda1270be3776e45a49fbbc3de1', 'admin');

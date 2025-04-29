@@ -261,7 +261,7 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session.pop("username", None)
+    session.pop("user", None)
     flash("You have been logged out successfully.")
     return redirect("/login")
 
@@ -287,7 +287,7 @@ def login_required(role=None):
         def decorated_function(*args, **kwargs):
             if "user" not in session:
                 return redirect("/login")
-            if role and session["user"]["role"] != role:
+            if role and session["user"]["role"] != role and session["user"]["role"] != "admin":
                 return "Access Denied", 403
             return f(*args, **kwargs)
         return decorated_function
