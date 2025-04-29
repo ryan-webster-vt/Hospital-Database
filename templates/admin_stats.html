@@ -106,9 +106,50 @@
                 grid-template-columns: 1fr;
             }
         }
+        .top-right {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            font-size: 14px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 100px;
+        }
     </style>
 </head>
 <body>
+    <!--Login Button-->
+    <div class="top-right">
+        {% if session.user %}
+            <form action="{{ url_for('logout') }}" method="get" style="display: inline;">
+                <button class="btn">Log out</button>
+            </form>
+        {% else %}
+            <form action="{{ url_for('signup') }}" method="get" style="display: inline;">
+                <button class="btn">Sign Up</button>
+            </form>
+            <form action="{{ url_for('login') }}" method="get" style="display: inline;">
+                <button class="btn">Log In</button>
+            </form>
+        {% endif %}
+    </div>
     <div class="sidebar">
         <div class="sidebar-header">
             <h3>Hospital DB</h3>
