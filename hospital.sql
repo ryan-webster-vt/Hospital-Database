@@ -309,3 +309,24 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2025-04-01 19:53:03
+
+-- Add users table for authentication
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL UNIQUE,
+  `password_hash` varchar(255) NOT NULL,
+  `role` varchar(20) NOT NULL,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- First, modify the users table to add the patient_id column
+ALTER TABLE `users` 
+ADD COLUMN `patient_id` int DEFAULT NULL,
+ADD CONSTRAINT `fk_users_patients` 
+FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) 
+ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- Insert the default admin account
+INSERT INTO `users` (`username`, `password_hash`, `role`) 
+VALUES ('admin', 'scrypt:32768:8:1$6rXjzlzuEviqOyyR$0461969c37c933e233b3ab74a4517afd1d1ccc0a26dcf6da5e518cc05c834086206117cde3a3c167982c063bff2015f61197afda1270be3776e45a49fbbc3de1', 'admin');

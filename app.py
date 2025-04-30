@@ -200,23 +200,23 @@ def list_patients():
             connection.close()
 
 # Adds user to user table
-def create_user(username, password, role):
+def create_user(username, password, role, patient_id=None):
     connection = get_connection()
     cursor = connection.cursor()
     hashed_pw = generate_password_hash(password)
-    sql = "INSERT INTO users (username, password_hash, role) VALUES (%s, %s, %s)"
-    cursor.execute(sql, (username, hashed_pw, role))
+    sql = "INSERT INTO users (username, password_hash, role, patient_id) VALUES (%s, %s, %s, %s)"
+    cursor.execute(sql, (username, hashed_pw, role, patient_id))
     connection.commit()
     connection.close()
 
 def validate_user(username, password):
     connection = get_connection()
     cursor = connection.cursor()
-    cursor.execute("SELECT user_id, password_hash, role FROM users WHERE username = %s", (username,))
+    cursor.execute("SELECT user_id, password_hash, role, patient_id FROM users WHERE username = %s", (username,))
     result = cursor.fetchone()
     connection.close()
     if result and check_password_hash(result[1], password):
-        return {"user_id": result[0], "username": username, "role": result[2]}
+        return {"user_id": result[0], "username": username, "role": result[2], "patient_id": result[3]}
     return None
 
 @app.route("/signup", methods = ["GET", "POST"])
@@ -225,9 +225,27 @@ def signup():
         username = request.form["username"]
         password = request.form["password"]
         role = request.form["role"]
-        create_user(username, password, role)
-        return redirect("/login")
-    return render_template("signup.html")
+        
+        # Only try to get patient_id if the role is 'patient'
+        patient_id = None
+        if role == 'patient' and 'patient_id' in request.form and request.form['patient_id']:
+            patient_id = request.form['patient_id']
+        
+        try:
+            create_user(username, password, role, patient_id)
+            flash(f"Account created successfully! Please log in.")
+            return redirect("/login")
+        except Exception as e:
+            flash(f"Error creating account: {str(e)}")
+    
+    # Get list of patients for the dropdown - only needed for the patient role
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT patient_id, first_name, last_name FROM patients ORDER BY last_name, first_name")
+    patients = cursor.fetchall()
+    connection.close()
+    
+    return render_template("signup.html", patients=patients)
 
 @app.route("/login", methods = ["GET", "POST"])
 def login():
@@ -235,6 +253,7 @@ def login():
         user = validate_user(request.form["username"], request.form["password"])
         if user:
             session["user"] = user
+            flash(f"Welcome, {user['username']}!")
             return redirect("/list")
         else:
             flash("Invalid credentials.")
@@ -242,7 +261,7 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session.pop("username", None)
+    session.pop("user", None)
     flash("You have been logged out successfully.")
     return redirect("/login")
 
@@ -268,28 +287,40 @@ def login_required(role=None):
         def decorated_function(*args, **kwargs):
             if "user" not in session:
                 return redirect("/login")
-            if role and session["user"]["role"] != role:
+            if role and session["user"]["role"] != role and session["user"]["role"] != "admin":
                 return "Access Denied", 403
             return f(*args, **kwargs)
         return decorated_function
     return wrapper
 
 @app.route("/admin/create_user", methods=["GET", "POST"])
-#@login_required(role="admin")
+@login_required(role="admin")
 def admin_create_user():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
         role = request.form["role"]
         
+        # Only try to get patient_id if the role is 'patient'
+        patient_id = None
+        if role == 'patient' and 'patient_id' in request.form and request.form['patient_id']:
+            patient_id = request.form['patient_id']
+        
         try:
-            create_user(username, password, role)
+            create_user(username, password, role, patient_id)
             flash(f"User '{username}' created successfully as {role}.")
             return redirect("/admin/create_user")
         except Exception as e:
             flash(f"Error creating user: {str(e)}")
     
-    return render_template("admin_create_user.html")
+    # Get list of patients for the dropdown
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT patient_id, first_name, last_name FROM patients ORDER BY last_name, first_name")
+    patients = cursor.fetchall()
+    connection.close()
+    
+    return render_template("admin_create_user.html", patients=patients)
 
 # --------------------------
 # New Statistical Reports Routes
@@ -297,7 +328,7 @@ def admin_create_user():
 
 # ADMIN STATISTICS
 @app.route("/stats/admin")
-#@login_required(role="admin")
+@login_required(role="admin")
 def admin_stats():
     try:
         connection = get_connection()
@@ -337,7 +368,7 @@ def admin_stats():
 
 # DOCTOR STATISTICS
 @app.route("/stats/doctor")
-#@login_required(role="doctor")
+@login_required(role="doctor")
 def doctor_stats():
     try:
         connection = get_connection()
@@ -387,7 +418,7 @@ def doctor_stats():
 
 # NURSE STATISTICS
 @app.route("/stats/nurse")
-#@login_required(role="nurse")
+@login_required(role="nurse")
 def nurse_stats():
     try:
         connection = get_connection()
@@ -450,16 +481,28 @@ def nurse_stats():
 
 # PATIENT STATISTICS
 @app.route("/stats/patient")
-#@login_required(role="patient")
+@login_required(role="patient")
 def patient_stats():
     try:
-        # For demonstration purposes, we'll show stats for a mock patient
-        # Later this would be tied to the logged-in user's patient ID
         connection = get_connection()
         cursor = connection.cursor()
         
-        # Use a sample patient ID for now
-        patient_id = 1  # Sample patient ID
+        # Get the patient_id of the logged in user
+        # Check if user has a patient_id associated with their account
+        if 'user' in session and session['user'].get('patient_id'):
+            patient_id = session['user']['patient_id']
+            print(patient_id)
+        else:
+            return "Your user account is not linked to any patient record. Please contact the administrator."
+        
+        # Get patient name for displaying in the template
+        cursor.execute("SELECT first_name, last_name FROM patients WHERE patient_id = %s", (patient_id,))
+        patient_name = cursor.fetchone()
+        
+        if not patient_name:
+            return "Patient record not found. Please contact the administrator."
+            
+        patient_fullname = f"{patient_name[0]} {patient_name[1]}"
         
         # 1. Number of appointments for this patient
         cursor.execute("SELECT COUNT(*) FROM appointments WHERE patient_id = %s", (patient_id,))
@@ -472,21 +515,44 @@ def patient_stats():
         # 3. Total dosage amount from prescriptions (SUM)
         cursor.execute("SELECT SUM(dosage) FROM prescriptions WHERE patient_id = %s", (patient_id,))
         total_dosage = cursor.fetchone()[0]
+        total_dosage = total_dosage if total_dosage else 0  # Handle None result
 
         # 4. Average prescription dosage (AVG)
         cursor.execute("SELECT AVG(dosage) FROM prescriptions WHERE patient_id = %s", (patient_id,))
         avg_dosage = cursor.fetchone()[0]
+        avg_dosage = avg_dosage if avg_dosage else 0  # Handle None result
 
         # 5. Number of treatments received (from the treats table)
         cursor.execute("SELECT COUNT(*) FROM treats WHERE patient_id = %s", (patient_id,))
         treatments_count = cursor.fetchone()[0]
 
+        # 6. Get medical record information for this patient
+        cursor.execute("""
+            SELECT m.sex, m.height, m.vaccination_count 
+            FROM medical_record m
+            JOIN patients p ON m.medical_record_id = p.medical_record_id
+            WHERE p.patient_id = %s
+        """, (patient_id,))
+        medical_record = cursor.fetchone()
+        
+        # Set default values if no medical record exists
+        sex = height = vaccination_count = "No data"
+        if medical_record:
+            sex = medical_record[0] if medical_record[0] else "Not specified"
+            height = medical_record[1] if medical_record[1] else "Not specified"
+            vaccination_count = medical_record[2] if medical_record[2] else 0
+
         return render_template("patient_stats.html",
+                               patient_id=patient_id,
+                               patient_name=patient_fullname,
                                appointments_count=appointments_count,
                                prescriptions_count=prescriptions_count,
                                total_dosage=total_dosage,
                                avg_dosage=avg_dosage,
-                               treatments_count=treatments_count)
+                               treatments_count=treatments_count,
+                               sex=sex,
+                               height=height,
+                               vaccination_count=vaccination_count)
     except Exception as e:
         return f"Error generating patient statistics: {str(e)}"
     finally:
