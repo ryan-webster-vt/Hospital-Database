@@ -3,7 +3,7 @@
 ### Clone the Repository
 ```bash
 git clone https://github.com/ryan-webster-vt/Hospital-Database.git
-cd \path\
+cd Hospital-Database
 ```
 ### Set Up a Virtual Environment
 ```bash
@@ -16,14 +16,20 @@ pip install -r requirements.txt
 ```
 ### Configure MySQL 
 Make sure you have a running MySQL server.
+Login
+```bash
+mysql -u root -p
+```
+You will be prompted to insert your MySQL password.
 Then create a database:
 ```sql
 CREATE DATABASE hospital;
 exit;
 ```
 ### Load .sql Onto Database
+If you're using a different MySQL username, replace root
 ```bash
-mysql -u [username] -p hospital < hospital.sql
+mysql -u root -p hospital < hospital.sql
 ```
 ### Create and Edit .env file
 ```bash
@@ -38,7 +44,7 @@ DB_NAME=hospital
 Click Ctrl-O then Enter to save and Ctrl-X to exit.
 ### Launch Website
 ```bash
-venv\Scripts\activate
+source venv/bin/activate # On Windows: venv\Scripts\activate
 flask run
 ```
 Click on link once launched: http://127.0.0.1:5000
