@@ -15,13 +15,11 @@ source venv/bin/activate # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 ### Configure MySQL 
-Make sure you have a running MySQL server.
-Login
+Make sure you have a running MySQL server, then login. Replace root with your username if necessary. 
 ```bash
 mysql -u root -p
 ```
-You will be prompted to insert your MySQL password.
-Then create a database:
+You will be prompted to insert your MySQL password. Next, create your database:
 ```sql
 CREATE DATABASE hospital;
 exit;
@@ -35,7 +33,7 @@ mysql -u root -p hospital < hospital.sql
 ```bash
 nano .env
 ```
-Edit your .env file as shown below, replace DB_USER and DB_PASSWORD with your respective MySQL username and password.
+Edit your .env file as shown below, replace entries of DB_USER and DB_PASSWORD with your respective MySQL username and password.
 ```bash
 DB_USER=username
 DB_PASSWORD=password
